@@ -1,0 +1,247 @@
+	; caps lock not tested for
+	; shift in keymods
+
+	; control sequences, mostly unpopulated
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; nul
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^a
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^b
+	; MOD - encode as ^c
+	word 00000h, 00000h, 00000h, 04000h
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^d
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^e
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^f
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^g
+	; LEFT ^h
+	word 00000h, 00000h, 00000h, 00001h
+	; TAB - implement as SHIFT-SPACE ^i
+	word 00000h, 00000h, 00000h, 08400h
+	; RT - encode as standard line feed ^j
+	word 00000h, 00000h, 00000h, 01000h
+	; UP ^k
+	word 00000h, 00000h, 00000h, 00002h
+	; RIGHT ^l
+	word 00000h, 00000h, 00000h, 00008h
+	; DOWN - encode as CR ^m
+	word 00000h, 00000h, 00000h, 00004h
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^n
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^o
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^p
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^q
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^r
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^s
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^t
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^u
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^v
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^w
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^x
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^y
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^z
+	; MON - encode as ESC
+	word 00000h, 00000h, 00000h, 00800h	; ^[
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^\
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	; ^]
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	;
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	;
+	word 0ffffh, 0ffffh, 0ffffh, 0ffffh	;
+
+	; symbols and numbers, 32-64
+	; SPACE
+	word 00000h, 00000h, 00000h, 08000h
+	; !
+	word 00100h, 00000h, 00000h, 00400h
+	; "
+	word 00200h, 00000h, 00000h, 00400h
+	; #
+	word 00001h, 00000h, 00000h, 00400h
+	; $
+	word 00002h, 00000h, 00000h, 00400h
+	; %
+	word 00000h, 00100h, 00000h, 00400h
+	; &
+	word 00000h, 00200h, 00000h, 00400h
+	; '
+	word 00000h, 00001h, 00000h, 00400h
+	; (
+	word 00000h, 00002h, 00000h, 00400h
+	; )
+	word 00000h, 00004h, 00000h, 00400h
+	; *
+	word 00000h, 00000h, 00010h, 00400h
+	; +
+	word 00000h, 00000h, 02000h, 00400h
+	; ,
+	word 00000h, 00000h, 04000h, 00000h
+	; -
+	word 00000h, 00000h, 00200h, 00000h
+	; .
+	word 00000h, 00000h, 08000h, 00000h
+	; /
+	word 00000h, 00000h, 00040h, 00000h
+	; 0
+	word 00000h, 00000h, 00100h, 00000h
+	; 1
+	word 00100h, 00000h, 00000h, 00000h
+	; 2
+	word 00200h, 00000h, 00000h, 00000h
+	; 3
+	word 00001h, 00000h, 00000h, 00000h
+	; 4
+	word 00002h, 00000h, 00000h, 00000h
+	; 5
+	word 00000h, 00100h, 00000h, 00000h
+	; 6
+	word 00000h, 00200h, 00000h, 00000h
+	; 7
+	word 00000h, 00001h, 00000h, 00000h
+	; 8
+	word 00000h, 00002h, 00000h, 00000h
+	; 9
+	word 00000h, 00004h, 00000h, 00000h
+	; :
+	word 00000h, 00000h, 00010h, 00000h
+	; semicolon
+	word 00000h, 00000h, 02000h, 00000h
+	; <
+	word 00000h, 00000h, 04000h, 00400h
+	; =
+	word 00000h, 00000h, 00100h, 00400h
+	; >
+	word 00000h, 00000h, 08000h, 00400h
+	; ?
+	word 00000h, 00000h, 00040h, 00400h
+	; @
+	word 00000h, 00000h, 00008h, 00400h
+
+	; uppercase 65-90. WARNING: MAME DEFAULTS TO SOME OF THESE AS JOY 2!
+	; A (JOY2)
+	word 01000h, 00000h, 00000h, 00400h
+	; B
+	word 00000h, 04000h, 00000h, 00400h
+	; C 
+	word 00040h, 00000h, 00000h, 00400h
+	; D (JOY2)
+	word 00010h, 00000h, 00000h, 00400h
+	; E
+	word 00004h, 00000h, 00000h, 00400h
+	; F (JOY2)
+	word 00020h, 00000h, 00000h, 00400h
+	; G (JOY2)
+	word 00000h, 01000h, 00000h, 00400h
+	; H
+	word 00000h, 02000h, 00000h, 00400h
+	; I
+	word 00000h, 00010h, 00000h, 00400h
+	; J
+	word 00000h, 00020h, 00000h, 00400h
+	; K
+	word 00000h, 00040h, 00000h, 00400h
+	; L
+	word 00000h, 00000h, 01000h, 00400h
+	; M
+	word 00000h, 00080h, 00000h, 00400h
+	; N
+	word 00000h, 08000h, 00000h, 00400h
+	; O
+	word 00000h, 00000h, 00400h, 00400h
+	; P 
+	word 00000h, 00000h, 00800h, 00400h
+	; Q
+	word 00400h, 00000h, 00000h, 00400h
+	; R (JOY2)
+	word 00008h, 00000h, 00000h, 00400h
+	; S (JOY2)
+	word 02000h, 00000h, 00000h, 00400h
+	; T
+	word 00000h, 00400h, 00000h, 00400h
+	; U
+	word 00000h, 00008h, 00000h, 00400h
+	; V
+	word 00080h, 00000h, 00000h, 00400h
+	; W
+	word 00800h, 00000h, 00000h, 00400h
+	; X
+	word 08000h, 00000h, 00000h, 00400h
+	; Y
+	word 00000h, 00800h, 00000h, 00400h
+	; Z
+	word 04000h, 00000h, 00000h, 00400h
+
+	; symbols 91-96
+	; [
+	word 00000h, 00000h, 00020h, 00000h
+	; \ rendered as handaku
+	word 00000h, 00000h, 00004h, 00000h
+	; ]
+	word 00000h, 00000h, 00080h, 00000h
+	; ^
+	word 00000h, 00000h, 00004h, 00400h
+	; _
+	word 00000h, 00000h, 00008h, 00000h
+	; backtick - implement as SHIFT-UP
+	word 00000h, 00000h, 00000h, 00402h
+
+	; lowercase 97-122
+	; a (JOY2 -- see above)
+	word 01000h, 00000h, 00000h, 00000h
+	; b
+	word 00000h, 04000h, 00000h, 00000h
+	; c
+	word 00040h, 00000h, 00000h, 00000h
+	; d (JOY2)
+	word 00010h, 00000h, 00000h, 00000h
+	; e
+	word 00004h, 00000h, 00000h, 00000h
+	; f (JOY2)
+	word 00020h, 00000h, 00000h, 00000h
+	; g (JOY2)
+	word 00000h, 01000h, 00000h, 00000h
+	; h
+	word 00000h, 02000h, 00000h, 00000h
+	; i
+	word 00000h, 00010h, 00000h, 00000h
+	; j
+	word 00000h, 00020h, 00000h, 00000h
+	; k
+	word 00000h, 00040h, 00000h, 00000h
+	; l
+	word 00000h, 00000h, 01000h, 00000h
+	; m
+	word 00000h, 00080h, 00000h, 00000h
+	; n
+	word 00000h, 08000h, 00000h, 00000h
+	; o
+	word 00000h, 00000h, 00400h, 00000h
+	; p
+	word 00000h, 00000h, 00800h, 00000h
+	; q
+	word 00400h, 00000h, 00000h, 00000h
+	; r (JOY2)
+	word 00008h, 00000h, 00000h, 00000h
+	; s (JOY2)
+	word 02000h, 00000h, 00000h, 00000h
+	; t
+	word 00000h, 00400h, 00000h, 00000h
+	; u
+	word 00000h, 00008h, 00000h, 00000h
+	; v
+	word 00080h, 00000h, 00000h, 00000h
+	; w
+	word 00800h, 00000h, 00000h, 00000h
+	; x
+	word 08000h, 00000h, 00000h, 00000h
+	; y
+	word 00000h, 00800h, 00000h, 00000h
+	; z
+	word 04000h, 00000h, 00000h, 00000h
+
+	; remaining symbols
+	; {
+	word 00000h, 00000h, 00020h, 00400h
+	; | (flat)
+	word 00000h, 00000h, 00200h, 00400h
+	; }
+	word 00000h, 00000h, 00080h, 00400h
+	; tilde - implement as SHIFT-DOWN
+	word 00000h, 00000h, 00000h, 00404h
+	; DELETE - SHIFT LEFT
+	word 00000h, 00000h, 00000h, 00401h

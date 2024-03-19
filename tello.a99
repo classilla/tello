@@ -1,0 +1,416 @@
+	padding off
+
+	; vdp ports on the tutor
+vdpwd	equ 0e000h
+vdpwr	equ 0e002h
+	; CRU address for reading the keyboard
+keycru	equ 0ec00h
+
+	org 08000h
+
+	; cartridge signature word
+	word 05555h
+
+	; IT'S MY TUTOR ALL MINE I WON'T SHARE
+	; ass-U-me (mostly) nothing!
+	; the Tomy menu zeroes out everything in 9918A RAM
+	; set up a screen similar to Tomy BASIC's, but indexes reflect
+	; true ASCII for convenience
+
+	limi 0
+	lwpi 0f000h	; don't even trust the Tomy OS here
+
+	; init VDP
+	; register 0 turn off bitmap and external video
+	li r0,08000h
+	bl @vdpr
+	; register 1
+	; - 16K mode
+	; screen off
+	; no IRQs
+	; no 40 column text mode (except if we asked for it?)
+	; no multicolour
+	; no bit 5
+	; normal 8x8 sprites
+	; normal sized sprites
+	ifdef COLS40
+		li r0,08190h
+	else
+		li r0,08180h
+	endif
+	bl @vdpr
+	; register 2: put screen table at 0800h
+	li r0,08202h
+	bl @vdpr
+	; register 3: put colour table at 0c00h
+	li r0,08330h
+	bl @vdpr
+	; register 4: put character set at 0000h
+	li r0,08400h
+	bl @vdpr
+	; register 5: put sprite attributes at 0000h
+	li r0,08500h
+	bl @vdpr
+	; register 6: put sprite pattern table at 1000h
+	li r0,08602h
+	bl @vdpr
+	; register 7: white text on green background
+	; (the only colours available for 40-column)
+	li r0,087f2h
+	bl @vdpr
+
+	; load our font to >0000
+	li r0,04000h
+	bl @vdpr
+	li r1,fontt
+lup	movb *r1+,@vdpwd
+	ci r1,fontt+00800h
+	jne lup
+
+	; clear screen to spaces at >0800
+	; not strictly necessary since 0 is also blank in our default
+	; character set, but probably a good idea
+	bl @clrscr
+
+	; write colours to >0c00, if 32 column mode
+	; white on green with border white
+	ifndef COLS40
+cols		li r0,04c00h
+		bl @vdpr
+		; white on green, double pumped
+		li r0,0f2f2h
+		li r1,16
+lup3		movb r0,@vdpwd
+		movb r0,@vdpwd
+		dec r1
+		jne lup3
+
+		; border white
+		li r0,0872fh
+		bl @vdpr
+	endif
+
+	; main screen turn on
+	ifdef COLS40
+		li r0,081d0h
+	else
+		li r0,081c0h
+	endif
+	bl @vdpr
+
+	; write character set to screen
+	; r7 is now our character pointer
+	li r0,04800h
+	mov r0,r7
+	bl @vdpr
+	clr r0
+lup2	movb r0,@vdpwd
+	inc r7
+	ai r0,00100h
+	ci r0,0
+	jne lup2
+
+	ifdef COLS40
+		; write 24 more spaces to line everything up
+		li r0,02000h
+		li r1,24
+lup2s		movb r0, @vdpwd
+		inc r7
+		dec r1
+		jne lup2s
+	endif
+
+	; write entire hello world string after
+	li r1,hw
+lup2a	movb *r1+,r0
+	ci r0,0
+	jeq dun
+	movb r0,@vdpwd
+	inc r7
+	jmp lup2a
+dun	; emit cursor
+	li r0,0a000h
+	movb r0,@vdpwd
+
+	; scan keyboard
+	; needs 16 bytes of scratchpad RAM
+keyzone	equ 0f020h
+keezc	clr r0			; clear debounce
+	mov r0,@keyzone+8
+	mov r0,@keyzone+10
+	mov r0,@keyzone+12
+	mov r0,@keyzone+14
+keez	clr r9			; clear test
+	li r2,keyzone
+	li r12,keycru-16
+keezl	ai r12,00010h
+	clr r0
+	stcr r0,8
+	movb r0,*r2+
+	socb r0,r9		; bitwise or
+	ci r2,keyzone+8
+	jne keezl
+	ci r9,0
+	jeq keezc		; clear debounce if nothing pressed
+
+			; enable this to see the actual keyscan value
+			if 0
+			li r0, 04ae0h
+			bl @vdpr
+			mov @keyzone, r0
+			bl @hexout
+			li r0,02000h
+			movb r0,@vdpwd
+			mov @keyzone+2, r0
+			bl @hexout
+			li r0,02000h
+			movb r0,@vdpwd
+			mov @keyzone+4, r0
+			bl @hexout
+			li r0,02000h
+			movb r0,@vdpwd
+			mov @keyzone+6, r0
+			bl @hexout
+			li r0,02000h
+			movb r0,@vdpwd
+			endif
+
+	; debounce and implement key rollover
+	; todo - implement repeat
+	mov @keyzone,r2
+	mov @keyzone+2,r3
+	mov @keyzone+4,r4
+	mov @keyzone+6,r5
+	xor @keyzone+8,r2	; xor current bits with last set
+	xor @keyzone+10,r3
+	xor @keyzone+12,r4
+	; clear shift bit (prevent "eeking" characters when releasing)
+	andi r5,0fbffh
+	xor @keyzone+14,r5
+	; if exactly equal (i.e., all zeroes), go back
+	soc r3,r2
+	soc r4,r2
+	soc r5,r2
+	jeq keez	; don't clear debounce
+	; remove any bits in the debounce that aren't set currently
+	mov @keyzone,r0
+	inv r0
+	szc r0,@keyzone+8
+	mov @keyzone+2,r0
+	inv r0
+	szc r0,@keyzone+10
+	mov @keyzone+4,r0
+	inv r0
+	szc r0,@keyzone+12
+	mov @keyzone+6,r0
+	inv r0
+	szc r0,@keyzone+14
+	; remove any bits in the new keyscan that were still set in debounce
+	; if we end up with a cleared keyscan, it doesn't matter since we
+	; won't be able to decode it anyway
+	mov @keyzone,r0
+	szc @keyzone+8,r0	; inverted and
+	mov r0,@keyzone
+	mov @keyzone+2,r0
+	szc @keyzone+10,r0
+	mov r0,@keyzone+2
+	mov @keyzone+4,r0
+	szc @keyzone+12,r0
+	mov r0,@keyzone+4
+	mov @keyzone+6,r0
+	szc @keyzone+14,r0
+	mov r0,@keyzone+6
+	; update debounce, clearing shift
+	; add any new bits to debounce so they get masked off too
+	mov @keyzone,r0
+	soc @keyzone+8,r0
+	mov r0,@keyzone+8
+	mov @keyzone+2,r0
+	soc @keyzone+10,r0
+	mov r0,@keyzone+10
+	mov @keyzone+4,r0
+	soc @keyzone+12,r0
+	mov r0,@keyzone+12
+	mov @keyzone+6,r0
+	soc @keyzone+14,r0
+	andi r0,0fbffh
+	mov r0,@keyzone+14
+
+			; enable this to see the resulting debounce value
+			if 0
+			li r0, 04ac0h
+			bl @vdpr
+			mov @keyzone+8, r0
+			bl @hexout
+			li r0,02000h
+			movb r0,@vdpwd
+			mov @keyzone+10, r0
+			bl @hexout
+			li r0,02000h
+			movb r0,@vdpwd
+			mov @keyzone+12, r0
+			bl @hexout
+			li r0,02000h
+			movb r0,@vdpwd
+			mov @keyzone+14, r0
+			bl @hexout
+			li r0,02000h
+			movb r0,@vdpwd
+			endif
+
+	; decode key
+	; each table entry corresponds to CRUs >EC00-EC70
+	; use a custom table to generate a standard ASCII value
+	clr r6
+	li r1,keytab
+dekodl	mov *r1+,r2
+	mov *r1+,r3
+	mov *r1+,r4
+	mov *r1+,r5
+	ci r2,0ffffh		; no key here
+	jeq dekodn
+	; if the key matrix is an exact match, should be all zeroes
+	xor @keyzone,r2
+	xor @keyzone+2,r3
+	xor @keyzone+4,r4
+	xor @keyzone+6,r5
+	soc r3,r2
+	soc r4,r2
+	soc r5,r2
+	jeq dekodo
+dekodn	inc r6
+	ci r6,128
+	jne dekodl
+	b @keez
+dekodo	mov r6,r0		; got a good key
+
+	; check for mon - implemented as escape
+	ci r0,001bh
+	jeq bye
+
+	; check for RT - implemented as line feed
+	ci r0,000ah
+	jne putc
+	bl @clrscr
+	b @cursor
+
+	; otherwise print character using a cursor
+	; overwrite previous cursor character with new character
+putc	swpb r7
+	movb r7, @vdpwr
+	swpb r7
+	movb r7, @vdpwr
+	swpb r0
+	; MAME will actually allow a mov here but not the real machine
+	movb r0, @vdpwd
+	inc r7
+	; and print cursor
+cursor	li r0,0a000h
+	movb r0, @vdpwd
+	b @keez
+
+bye	blwp 0
+
+vdpr	; write to VDP registers
+	; MSB of r0: command nybble + value (8r = register,
+	; 4x = MSB VDP RAM for write, 0x = for read)
+	; LSB of r0: new register value (xx) or LSB of VDP RAM address
+	; the swapping around gives enough time for the VDP to operate,
+	; and we have no IRQs on, so nothing will interfere
+	swpb r0
+	movb r0, @vdpwr
+	swpb r0
+	movb r0, @vdpwr
+	b *r11
+
+	; clear screen, setting data pointer and r7 to top corner
+clrscr	mov r11,r13
+	li r0,04800h
+	bl @vdpr
+	li r0,02000h
+	ifdef COLS40
+		li r1, 00400h
+	else
+		li r1,00300h
+	endif
+lup1	movb r0,@vdpwd
+	dec r1
+	jne lup1
+	li r0,04800h
+	mov r0,r7
+	bl @vdpr
+	b *r13
+
+hexout	; print value of r0 as hex (assumes VDP pointer is where you want it)
+	; uses r11, r10
+	mov r0,r10
+	andi r10,0f000h
+	srl r10,12
+	ai r10,48
+	ci r10,58
+	jlt hexout1
+	ai r10,7
+hexout1	swpb r10
+	movb r10, @vdpwd
+
+	mov r0,r10
+	andi r10,00f00h
+	srl r10,8
+	ai r10,48
+	ci r10,58
+	jlt hexout2
+	ai r10,7
+hexout2	swpb r10
+	movb r10, @vdpwd
+
+	mov r0,r10
+	andi r10,000f0h
+	srl r10,4
+	ai r10,48
+	ci r10,58
+	jlt hexout3
+	ai r10,7
+hexout3	swpb r10
+	movb r10, @vdpwd
+
+	mov r0,r10
+	andi r10,0000fh
+	ai r10,48
+	ci r10,58
+	jlt hexout4
+	ai r10,7
+hexout4	swpb r10
+	movb r10, @vdpwd
+	b *r11
+
+hw	; splatted on directly
+	byte "                                "
+	ifdef COLS40
+		byte "        "
+	endif
+	byte "Hello from Tomy Tutor World!    "
+	ifdef COLS40
+		byte "        "
+	endif
+	byte "Visit oldvcr.blogspot.com       "
+	ifdef COLS40
+		byte "        "
+	endif
+	byte "Just type! MON exits, RT clears."
+	ifdef COLS40
+		byte "        "
+	endif
+	byte "                                "
+	ifdef COLS40
+		byte "        "
+	endif
+	byte 00h
+	align 2
+
+fontt	ifdef COLS40
+		binclude "tomysc40.bin"
+	else
+		binclude "tomyscii.bin"
+	endif
+
+keytab	include "tomykeys.tbl"

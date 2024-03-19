@@ -1,0 +1,58 @@
+#!/usr/bin/perl -s
+#
+# Splices a binary into another binary.
+# Copyright (C) 2024 Cameron Kaiser.
+# All rights reserved.
+# BSD 3-clause license.
+
+$fillb ||= 0;
+$truncate ||= 0;
+$expand ||= 0;
+
+($in, $offs, $rep, $len) = (@ARGV);
+$offs = hex($offs) if ($offs =~ /^\$/ || $offs =~ /^0[xX]/);
+$len = hex($len) if ($len =~ /^\$/ || $len =~ /^0[xX]/);
+die("usage: $0 inputfile offset replacefile length\nvalues may be hex (0x)\n")
+	if (!length($in) || !length($rep) || !$len);
+die("can't read $in\n") if (! -r $in);
+die("can't write $in\n") if (! -w $in);
+die("can't read $rep\n") if (! -r $rep);
+(@statinfo) = stat($in); die("can't stat $in: $!\n") if (!scalar(@statinfo));
+$inl = $statinfo[7];
+(@statinfo) = stat($rep); die("can't stat $rep: $!\n") if (!scalar(@statinfo));
+$repl = $statinfo[7];
+die("$rep is zero length?\n") if (!$repl);
+die("length $len less than $rep size of $repl\npass -truncate to ignore\n")
+	unless ($truncate || $len >= $repl);
+die("not enough room in $in to replace $len bytes at position $offs\n" .
+	"pass -expand to ignore\n")
+		unless ($expand || $inl >= ($offs + $len));
+
+undef $/;
+open(K, $in) || die("can't read $in: $!\n");
+$inbuf = <K>;
+close(K);
+(@inbufk) = unpack("C*", $inbuf);
+$inbufl = scalar(@inbufk);
+die("read $inbufl bytes from $in, expected $inl\n") if ($inl != $inbufl);
+
+open(K, $rep) || die("can't read $rep: $!\n");
+$repbuf = <K>;
+close(K);
+(@repbufk) = unpack("C*", $repbuf);
+$repbufl = scalar(@repbufk);
+die("read $repbufl bytes from $rep, expected $repl\n") if ($repl != $repbufl);
+
+push(@repbufk, $fillb) while (scalar(@repbufk) < $len);
+
+open(K, ">$in") || die("can't write $in: $!\n");
+print K pack("C*", @inbufk[0..($offs-1)]);
+print K pack("C*", @repbufk[0..($len-1)]);
+print K pack("C*", @inbufk[($offs+$len)..($inl-1)])
+	if ($offs+$len < $inl);
+close(K);
+(@statinfo) = stat($in); die("can't stat $in: $!\n") if (!scalar(@statinfo));
+die("ugh, originally $inl bytes, now $statinfo[7], sorry\n")
+	if ($inl != $statinfo[7]);
+warn("successfully replaced $len bytes at offset $offs in $in with $rep\n");
+

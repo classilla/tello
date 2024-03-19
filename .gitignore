@@ -1,0 +1,8 @@
+cfg
+cfg/*
+stuff
+stuff/*
+*.lst
+*.bld
+*.rom
+
