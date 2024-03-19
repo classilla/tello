@@ -1,5 +1,11 @@
 	padding off
 
+	; tello world, a fast character I/O proof of concept for the
+	; Tomy Tutor. (C) 2024 cameron kaiser. all rights reserved,
+	; BSD 3-clause license.
+	;
+	; oldvcr.blogspot.com
+
 	; vdp ports on the tutor
 vdpwd	equ 0e000h
 vdpwr	equ 0e002h
